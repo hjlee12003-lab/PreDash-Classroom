@@ -46,7 +46,7 @@ if not hasattr(watch_module,'backup_names'):
 clean_codes,export_backup,restore_backup,MAX_WATCH,clean_names,backup_names = (getattr(watch_module,k) for k in ('clean_codes','export_backup','restore_backup','MAX_WATCH','clean_names','backup_names'))
 from predash.paper import new_account, replay, execute, export_account, restore_account, PaperError
 
-st.set_page_config(page_title='PreDash · 내 계좌 점검실', page_icon='◈', layout='wide')
+st.set_page_config(page_title='나의 투자 대시보드 · PreDash', page_icon='◈', layout='wide')
 st.html('''<style>
 :root{--pd-ink:#183b30;--pd-muted:#53665c;--pd-gold:#876119;--pd-line:#dddccc;--pd-paper:#fffef9;--pd-base:#f4f3eb}
 html,body,.stApp{font-family:Pretendard,"Noto Sans KR",sans-serif;color:var(--pd-ink);font-variant-numeric:tabular-nums}
@@ -217,18 +217,28 @@ def watch_fetch(code,provider,today):
     return result
 
 password=os.getenv('APP_PASSWORD','').strip()
+if not password:
+    st.title('나의 투자 대시보드')
+    st.warning('앱 비밀번호 설정이 필요합니다.')
+    st.write('Streamlit 앱 Settings → Secrets에 APP_PASSWORD를 설정하면 로그인 화면이 열립니다.')
+    st.code('APP_PASSWORD = "본인이 정한 비밀번호"', language='toml')
+    st.stop()
+if st.session_state.pop('clear_login_input', False):
+    st.session_state.pop('login_password', None)
 if password and not st.session_state.get('authorized'):
-    st.title('PreDash Classroom')
+    st.title('나의 투자 대시보드')
     st.link_button('교육자료', 'https://stock-dash-11a.streamlit.app/')
     st.link_button('소통 게시판', 'https://etf2x.com/learn/live')
     st.html('<div class="pd-intro">내일의 투자, 오늘 더 명확하게</div>')
     st.subheader('내 계좌를 읽는 개인 분석 공간')
     st.write('계좌·지수·기업 자료를 연결해 오늘 확인할 순서를 정리합니다.')
     with st.form('login'):
-        entered=st.text_input('대시보드 비밀번호',type='password')
+        entered=st.text_input('대시보드 비밀번호',type='password',key='login_password')
         if st.form_submit_button('내 대시보드 열기',type='primary'):
-            if hmac.compare_digest(entered,password):
-                st.session_state.authorized=True; st.rerun()
+            if hmac.compare_digest(entered.encode("utf-8"),password.encode("utf-8")):
+                st.session_state.authorized=True
+                st.session_state.clear_login_input=True
+                st.rerun()
             st.error('비밀번호를 확인하세요.')
     st.stop()
 
@@ -238,10 +248,10 @@ def open_research(code):
     st.session_state['decision_code_'+code]=code
 
 with st.sidebar:
-    st.title('PreDash Classroom')
+    st.title('나의 투자 대시보드')
     st.link_button('교육자료', 'https://stock-dash-11a.streamlit.app/')
     st.link_button('소통 게시판', 'https://etf2x.com/learn/live')
-    st.html('<div class="pd-brand-note">나의 투자 흐름을 읽는 공간</div><div class="pd-side-label">투자 워크스페이스</div>')
+    st.html('<div class="pd-brand-note">시장·실적·수급을 확인하고 투자 근거를 기록하는 공간</div><div class="pd-side-label">투자 워크스페이스</div>')
     page=st.radio('메뉴',['오늘의 점검','관심종목','투자 근거','내 계좌','모의투자','매매 연습','매매 습관','연결 설정'],label_visibility='collapsed',key='navigation',
         index=0 if all(account_settings()[k] for k in ('key','secret','cano','product')) else 1,
         format_func=lambda item:{'오늘의 점검':'01  투자 대시보드','내 계좌':'04  내 계좌 · 보유종목',
