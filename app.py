@@ -269,9 +269,9 @@ with st.sidebar:
     st.link_button('교육자료', 'https://stock-dash-11a.streamlit.app/')
     st.link_button('소통 게시판', 'https://etf2x.com/learn/live')
     st.html('<div class="pd-brand-note">시장·실적·수급을 확인하고 투자 근거를 기록하는 공간</div><div class="pd-side-label">투자 워크스페이스</div>')
-    page=st.radio('메뉴',['오늘의 점검','관심종목','투자 근거','내 계좌','모의투자','매매 연습','매매 습관','연결 설정'],label_visibility='collapsed',key='navigation',
-        index=0 if all(account_settings()[k] for k in ('key','secret','cano','product')) else 1,
-        format_func=lambda item:{'오늘의 점검':'01  투자 대시보드','내 계좌':'04  내 계좌 · 보유종목',
+    page=st.radio('메뉴',['나의 투자관리','오늘의 점검','관심종목','투자 근거','내 계좌','모의투자','매매 연습','매매 습관','연결 설정'],label_visibility='collapsed',key='navigation',
+        index=0,
+        format_func=lambda item:{'나의 투자관리':'◈  나의 투자관리','오늘의 점검':'01  투자 대시보드','내 계좌':'04  내 계좌 · 보유종목',
             '관심종목':'02  관심종목 분석','매매 습관':'07  매매 기록 · 습관',
             '모의투자':'05  모의투자 계좌','매매 연습':'06  매매 연습','연결 설정':'08  데이터 연결','투자 근거':'03  투자 근거 · 비교 차트'}[item])
     st.divider()
@@ -287,6 +287,11 @@ if large_text:
     st.html('<style>.stApp p,.stApp li{font-size:20px}.pd-watch small,.pd-card-sub,.pd-card-note,.pd-card-body small,.pd-holding-head small{font-size:18px}.pd-v-table,.pd-v-empty,.pd-v-notice,.pd-v-company{font-size:18px}.pd-v-note,.pd-v-legend,.pd-v-table small,.pd-v-notice small,.pd-v-company small{font-size:16px}</style>')
 mode_label='모의투자' if page=='모의투자' else ('매매 연습' if page=='매매 연습' else '실전 조회' if account_settings()['mode']=='real' else '개인 분석')
 st.html(f"<div class='pd-toolbar'><span class='pd-toolbar-title'>PreDash / {html.escape(page)}</span><div class='pd-badges'><span class='pd-badge'>{html.escape(mode_label)}</span><span class='pd-badge gold'>조회 전용</span><span class='pd-badge'>UI 2.8</span></div></div>")
+
+if page=='나의 투자관리':
+    from predash.portfolio import render as render_portfolio
+    render_portfolio()
+    st.stop()
 
 @st.cache_data(ttl=1800,show_spinner=False)
 def cached_vix(day):return fetch_vix(day)
